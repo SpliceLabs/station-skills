@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "station/source@1",
+  "description": "What Station sends a `station/source@1` source and the only answers it accepts back, per tool. See source-v1.md. Also checked by Station, beyond this schema: (1) Station counts a string's length in UTF-8 bytes where the contract says bytes, and otherwise in UTF-16 code units; the schema counts characters at the same bound, so a string with characters outside ASCII can pass the schema and still be too long. (2) Each item's `fields` serializes to at most 16384 UTF-8 bytes. (3) A read answer holds no more items than its `limit` asked for. (4) No item id appears twice in one answer.",
+  "$defs": {
+    "source_identity.arguments": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "source_identity.answer": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "type": "string",
+          "const": "station/source@1"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "contract",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "source_read.arguments": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "selector": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        }
+      },
+      "required": [
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "json": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/json"
+          }
+        }
+      ]
+    },
+    "source_read.answer": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "type": "string",
+          "const": "station/source@1"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        "simulated": {
+          "type": "boolean"
+        },
+        "items": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "fields": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/json"
+                }
+              }
+            },
+            "required": [
+              "item_id",
+              "fields"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "contract",
+        "source",
+        "simulated",
+        "items"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

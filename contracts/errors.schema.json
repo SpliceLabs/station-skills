@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "error answer",
+  "description": "What a `@2` service answers in place of a result when it did not do what it was asked. See errors.md. Also checked by Station, beyond this schema: (1) Station counts a string's length in UTF-8 bytes where the contract says bytes, and otherwise in UTF-16 code units; the schema counts characters at the same bound, so a string with characters outside ASCII can pass the schema and still be too long. (2) Text a service writes for people or a model to read also holds no tag character (U+E0000 to U+E007F) and no lone surrogate; the `pattern` covers the rest of that rule. (3) No object anywhere in the answer holds a `__proto__`, `constructor` or `prototype` key, and nothing nests deeper than 40 levels (an opaque object, 32). (4) `retryable` is true for `rate_limited` and `unavailable` and false for every other code. (5) `retry_after_ms` is given only on a retryable code.",
+  "type": "object",
+  "properties": {
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "not_found",
+            "rate_limited",
+            "auth_expired",
+            "forbidden",
+            "bad_cursor",
+            "unsupported",
+            "unavailable",
+            "invalid_request"
+          ]
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "retry_after_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000
+        },
+        "fix_hint": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 500,
+          "pattern": "^[^\\u0000-\\u0009\\u000b-\\u001f\\u007f-\\u009f\\u061c\\u200b-\\u200f\\u2028-\\u202e\\u2060-\\u2064\\u2066-\\u2069\\ufeff]*$"
+        }
+      },
+      "required": [
+        "code",
+        "retryable",
+        "fix_hint"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "error"
+  ],
+  "additionalProperties": false
+}

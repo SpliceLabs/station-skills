@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "station/source@2",
+  "description": "What Station sends a `station/source@2` source and the only answer it accepts back. Every tool answers `answer`. See source-v2.md. Also checked by Station, beyond this schema: (1) Station counts a string's length in UTF-8 bytes where the contract says bytes, and otherwise in UTF-16 code units; the schema counts characters at the same bound, so a string with characters outside ASCII can pass the schema and still be too long. (2) Each item's `fields`, and its `raw`, serializes to at most 16384 UTF-8 bytes. (3) No object anywhere in the answer holds a `__proto__`, `constructor` or `prototype` key, and nothing nests deeper than 40 levels (an opaque object, 32). (4) `link` is an https link to a public host: not loopback, not a private address, no userinfo. (5) An answer holds no more items than the call's `limit` (for `source_read`, than refs asked for), and no ref twice. (6) For `source_list` and `source_search` with a `kind`, every item is of that kind. (7) `missing` is empty for every tool but `source_read`. (8) For `source_read`, every item and every `missing` entry is a ref that was asked for, each ref asked for is in exactly one of them, and `next_cursor` is null. (9) A search `query` is not blank. (10) In place of a result, any tool may answer the shared error answer, `errors.schema.json`.",
+  "$defs": {
+    "source_read.arguments": {
+      "type": "object",
+      "properties": {
+        "refs": {
+          "minItems": 1,
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "refs"
+      ],
+      "additionalProperties": false
+    },
+    "source_list.arguments": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "company",
+                "person",
+                "deal",
+                "stage",
+                "note",
+                "task",
+                "space",
+                "page",
+                "comment"
+              ]
+            },
+            {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^x-[a-z0-9]+(?:-[a-z0-9]+)*$"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      },
+      "required": [
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "source_changes.arguments": {
+      "type": "object",
+      "properties": {
+        "since": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        }
+      },
+      "required": [
+        "since",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "source_search.arguments": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "company",
+                "person",
+                "deal",
+                "stage",
+                "note",
+                "task",
+                "space",
+                "page",
+                "comment"
+              ]
+            },
+            {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^x-[a-z0-9]+(?:-[a-z0-9]+)*$"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      },
+      "required": [
+        "query",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "json": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/json"
+          }
+        }
+      ]
+    },
+    "answer": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "type": "string",
+          "const": "station/source@2"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        "simulated": {
+          "type": "boolean"
+        },
+        "items": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+              },
+              "kind": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "company",
+                      "person",
+                      "deal",
+                      "stage",
+                      "note",
+                      "task",
+                      "space",
+                      "page",
+                      "comment"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^x-[a-z0-9]+(?:-[a-z0-9]+)*$"
+                  }
+                ]
+              },
+              "remote_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "updated_at": {
+                "type": "string",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "link": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "mapping_version": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fields": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/json"
+                }
+              },
+              "raw": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/json"
+                }
+              }
+            },
+            "required": [
+              "ref",
+              "kind",
+              "remote_id",
+              "updated_at",
+              "link",
+              "mapping_version",
+              "fields"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "missing": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+          }
+        }
+      },
+      "required": [
+        "contract",
+        "source",
+        "simulated",
+        "items",
+        "next_cursor",
+        "missing"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "station/harness@1",
+  "description": "What Station hands a `station/harness@1` harness and the only answer it accepts back. See harness-v1.md. Also checked by Station, beyond this schema: (1) Station counts a string's length in UTF-8 bytes where the contract says bytes, and otherwise in UTF-16 code units; the schema counts characters at the same bound, so a string with characters outside ASCII can pass the schema and still be too long. (2) Each item's `fields`, and each output's `payload`, serializes to at most 16384 UTF-8 bytes. (3) The context's `content` serializes to at most 65536 UTF-8 bytes. (4) `run_id` is the run Station handed over, and `config_hash` the one the docking pinned. (5) Grounding: every output names an item Station handed over in the same call, no item has two outputs, and every `held_back` entry names an item handed over, once, that has no output. (6) A `blocked` answer carries no outputs. (7) `approved_by` is not blank.",
+  "$defs": {
+    "json": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/json"
+          }
+        }
+      ]
+    },
+    "harness_run.arguments": {
+      "type": "object",
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "items": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "fields": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/json"
+                }
+              }
+            },
+            "required": [
+              "item_id",
+              "fields"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "reference": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "simulated": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "reference",
+            "source",
+            "simulated"
+          ],
+          "additionalProperties": false
+        },
+        "context": {
+          "type": "object",
+          "properties": {
+            "context_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "content": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/json"
+              }
+            },
+            "provenance": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "const": "station"
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                },
+                "approved_by": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "content_hash": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "source",
+                "revision",
+                "approved_by",
+                "content_hash"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "context_id",
+            "version",
+            "content",
+            "provenance"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "run_id",
+        "items",
+        "provenance",
+        "context"
+      ],
+      "additionalProperties": false
+    },
+    "harness_run.answer": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "type": "string",
+          "const": "station/harness@1"
+        },
+        "run_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "config_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "blocked",
+            "not-ready",
+            "ready-with-caveats",
+            "ready"
+          ]
+        },
+        "findings": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "additionalProperties": {
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            }
+          }
+        },
+        "outputs": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "payload": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/json"
+                }
+              }
+            },
+            "required": [
+              "item_id",
+              "payload"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "held_back": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        }
+      },
+      "required": [
+        "contract",
+        "run_id",
+        "config_hash",
+        "verdict",
+        "findings",
+        "outputs",
+        "held_back"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
