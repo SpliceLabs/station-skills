@@ -6,6 +6,8 @@ written for an assistant to follow, in the Agent Skills format (`SKILL.md`), and
 | Pack | Skill | What it is for |
 |---|---|---|
 | `station` | [`station-service`](station/station-service/SKILL.md) | Build a source, harness or factory that Station can dock, check it with `station_check_service`, and propose it with `station_propose_docking` |
+| `station` | [`station-agent`](station/station-agent/SKILL.md) | Enroll an agent that runs on its own (a chief-of-staff agent, a scheduled assistant) so it signs in to Splice Station with its own key and acts for the person who owns it: make its key pair, propose it with station_propose_agent, have another administrator confirm it, and sign it in through the client-credentials flow. |
+| `station` | [`station-factory`](station/station-factory/SKILL.md) | Have a software factory docked in Splice Station build a ticket: read the local ticket file (and its feature's spec), check it is ready for an agent, start a task with the ticket's text as a self-contained brief, follow it, and report the pull request it opens for a person to review and merge. |
 
 Also here, because a builder needs them:
 - [`contracts/`](contracts/): every contract a docked service speaks, in prose (`*.md`) and as JSON Schema (`*.schema.json`).

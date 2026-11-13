@@ -1,5 +1,16 @@
 # Changelog
 
+## station 1.2.0
+
+- Contract prose `factory-v2.md` reworded.
+- Prompt `station/ask-for-access.md` reworded.
+- New prompt `station/build-a-ticket.md`.
+- Prompt `station/whats-waiting.md` reworded.
+- New skill `station-agent`.
+- New skill `station-factory`.
+- `station-service`: SKILL.md reworded.
+- Matches Station release `main-1aeffae0ce66`.
+
 ## station 1.1.0
 
 - New prompt `station/ask-for-access.md`.

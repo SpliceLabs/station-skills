@@ -14,7 +14,7 @@ Station decides what a company's AI may do and records what it did. It docks thr
 |---|---|---|---|
 | **Source** | Hands Station items from a system of record (a CRM, a knowledge base) | `station/source@2` | An administrator, from an MCP client |
 | **Harness** | Is handed items Station read from docked sources, a brief and an approved context document, and answers with drafts about those items | `station/harness@2` | An administrator, from an MCP client |
-| **Factory** | Starts coding tasks that open pull requests | `station/factory@2` | The operator, in Station's configuration |
+| **Factory** | Starts coding tasks that open pull requests | `station/factory@2` | An administrator, from an MCP client (or the operator, in Station's configuration) |
 
 Station never runs the service's insides, never plans or retries its work, and never sends or publishes what a harness writes: it decides each call, records it, and holds a harness's outputs for a person to review. It sees only what crosses the edge, so what the service does inside is the service's own.
 
@@ -312,7 +312,13 @@ Build to `../../contracts/factory-v2.schema.json` and `../../contracts/factory-v
 }
 ```
 
-`writes` names what it changes; Station pins it, and a factory declaring other writes is not called until it is docked again. `station_check_service` runs the URL rule, describe, the token probe and the description check for a factory, but never its tools: they start real work. A factory is docked by the operator: it is added to `factories` in Station's configuration and docked with `station-intake dock --factory <name> --proposer <name> --approver <another> --apply`, with Station stopped. It is not docked with `station_dock` or `station_propose_docking`, so once it passes, tell the operator its URL. A changed factory is docked again the same way.
+`writes` names what it changes; Station pins it, and a factory declaring other writes is not called until it is docked again. `station_check_service` runs the URL rule, describe, the token probe and the description check for a factory, but never its tools: they start real work. Once it passes, it is proposed and docked as a source or a harness is, with no `reads`; `factory` sets the most any task on it may run and spend, and the trackers a ticket may come from:
+
+```json station_propose_docking
+{ "name": "build", "url": "https://factory.example.com/mcp", "factory": { "limits": { "wallClockSeconds": 3600, "maxSpendUsd": 20 }, "ticketSources": ["github"] }, "reason": "Our coding factory for the web team" }
+```
+
+Docked, a factory may start work on no repository until an administrator grants repositories on it, by GitHub's numeric id, with `station_grant_access`. The built-in skill `station-factory` is how a person or an agent then has it build a ticket. A factory can also be configured in `factories` and docked by the operator with `station-intake dock --factory <name> --proposer <name> --approver <another> --apply`, with Station stopped; that one keeps working as it did.
 
 ## After it is docked
 
@@ -330,5 +336,4 @@ Say so before building, so nobody builds toward something Station refuses:
 - **Station's public key set comes from its operator.** Station does not serve it over MCP: the operator prints it with `station-intake jwks` and hands it to the builder, who needs it before any check can pass.
 - **Context documents are recorded by the operator,** with `station-intake context`, which names a proposer and a different approver and runs with Station stopped. They are not proposed from an MCP client yet, and a harness run needs one, so a newly docked harness waits on the operator before its first run.
 - **Outputs are drafts.** Nothing is sent or published, by design.
-- **A factory is not docked from an MCP client.** The operator docks it in configuration.
 - **Station can't see inside a service.** Web fetches, model calls and anything else it does are its own. Station governs only the call and what crosses the edge, and records it.
