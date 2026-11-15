@@ -1,6 +1,6 @@
 {
   "owner": "SpliceLabs",
   "packs": [
-    { "name": "station", "version": "1.2.0", "description": "Build, check and dock a service with Splice Station.", "skills": ["station-agent", "station-factory", "station-service"] }
+    { "name": "station", "version": "1.3.0", "description": "Build, check and dock a service with Splice Station.", "skills": ["station-agent", "station-factory", "station-service"] }
   ]
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## station 1.3.0
+
+- Decided by hand: contract file service-v1.md was added: say what it means for a service; published as minor.
+- Decided by hand: contract schema service-v1.schema.json is new: minor if no service must change for it, major if one must; published as minor.
+- Matches Station release `main-b33cdc946d04`.
+
 ## station 1.2.0
 
 - Contract prose `factory-v2.md` reworded.
