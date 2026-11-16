@@ -1,8 +1,7 @@
-# Error answers for the `@2` contracts
+# Error answers
 
-What a docked service that speaks [`station/source@2`](source-v2.md) or `station/harness@2` answers, in place of a result, when it did not do what it was asked. The code that reads it is `src/docking/error-codes.ts`, which a service vendors a copy of; the JSON Schema is [`errors.schema.json`](errors.schema.json). It is generated from that code by `bun run contracts:schemas`, and Station checks some rules beyond it, which the schema's `description` lists. The decision behind it is docked services may speak the @2 contracts beside @1.
+What a docked service that speaks [`station/service@1`](service-v1.md) answers, in place of a result, when it did not do what it was asked. The code that reads it is `src/docking/error-codes.ts`, which a service vendors a copy of; the JSON Schema is [`errors.schema.json`](errors.schema.json). It is generated from that code by `bun run contracts:schemas`, and Station checks some rules beyond it, which the schema's `description` lists.
 
-The `@1` contracts do not use it: they keep their `refused:` and `unavailable:` tool-error prefixes, unchanged ([`source-v1.md`](source-v1.md#failures)).
 
 ## Shape
 

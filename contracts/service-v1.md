@@ -1,6 +1,6 @@
 # Service contract `station/service@1`
 
-The one contract a docked service speaks, whatever it does. A service has no role. It lists its **operations**, and each operation declares its effects from a fixed vocabulary; Station's rules attach to those declarations. It sits beside the per-role contracts ([`describe@2`](describe-v2.md), [`source@2`](source-v2.md), [`harness@2`](harness-v2.md), [`factory@2`](factory-v2.md)) until our own services move to it; nothing docks with it yet.
+The one contract a docked service speaks, whatever it does. A service has no role. It lists its **operations**, and each operation declares its effects from a fixed vocabulary; Station's rules attach to those declarations. It is the only contract a docked service speaks; the per-role contracts it replaced are deleted. A software factory docks with it: Station docks a service whose one operation is a task changing a repository as a factory, decides that repository against the caller's grants, and follows the task through `status` and `cancel` (`connectors/factory/` is ours). A source docks with it too: a service whose every operation reads, offered as one tool per operation (the decision). A harness docks with it: a service whose one operation is handed items and gives back derived content, run as a task, as described under [A harness](#a-harness).
 
 The shapes are `src/docking/service-contract.ts` and `src/docking/task-status.ts`; what Station checks beyond them is `src/docking/effect-checker.ts`. The JSON Schema is [`service-v1.schema.json`](service-v1.schema.json), generated from that code by `bun run contracts:schemas`; its `description` lists every rule Station checks beyond it. The decision behind it is Station decides on declared effects, not roles.
 
@@ -24,7 +24,7 @@ The shapes are `src/docking/service-contract.ts` and `src/docking/task-status.ts
                    "runs": "now", "credential": "station" } } ] }
 ```
 
-`purpose`, `use_when`, `not_for`, `examples` and `limits` are bounded and hold the text rule exactly as in `describe@2`; an example names an operation instead of a tool. Callers see each operation as `<docking>_<operation>`. `describe`, `status`, `cancel` and `content` are the contract's own calls and no operation may take those names.
+`purpose` (at most 280 UTF-8 bytes), each of up to 8 `use_when` and `not_for` entries, each `examples[].ask` (up to 4) and each of up to 4 `limits` (200 bytes each) are the service's own words: no control character but a newline, no bidi or tag character, no lone surrogate. They are shown beside Station's own words and pinned with the rest of the answer. Callers see each operation as `<docking>_<operation>`. `describe`, `status`, `cancel` and `content` are the contract's own calls and no operation may take those names.
 
 ## The effect vocabulary
 
@@ -45,7 +45,24 @@ The old roles, as declarations: a CRM read takes `args` and gives `records`; a C
 
 ### Declarations that do not fit together are refused
 
-The describe answer is refused, whole, when: an operation is listed twice or takes a reserved name; an example names an unlisted operation; a service with a task gives no reporting interval or does not answer `status` and `cancel`, or a service with none gives an interval or task calls; an input schema is not an object schema with `additionalProperties: false`, holds any top-level keyword but `type`, `properties`, `required`, `additionalProperties`, `title` and `description` (a `patternProperties`, `$ref` or `allOf` could admit arguments the checker never sees), or has a `required` that is not a list of properties it lists; an operation lists input properties without taking `args`, or takes `args` and lists none; `kinds` is given other than exactly for `records`; `target` is given other than exactly for `changes: target`, or names a field the input does not list and require, or one that is not a typed id (a string with a `pattern` anchored by `^` and `$` and a `maxLength` of at most 256, or an object of nothing but required ones). Within that, what the pattern admits is the service's word: Station checks that it bounds the whole string, not that it is narrow. A host is a value, never fixed by the contract; an operation gives `derived` and neither takes `handed` nor calls back; `spends.reports` does not match `runs`.
+The describe answer is refused, whole, when: an operation is listed twice or takes a reserved name; an example names an unlisted operation; a service with a task gives no reporting interval or does not answer `status` and `cancel`, or a service with none gives an interval or task calls; an input schema is not an object schema with `additionalProperties: false`, holds any top-level keyword but `type`, `properties`, `required`, `additionalProperties`, `title` and `description` (a `patternProperties`, `$ref` or `allOf` could admit arguments the checker never sees), or has a `required` that is not a list of properties it lists; an operation lists input properties without taking `args`, or takes `args` and lists none; `kinds` is given other than exactly for `records`; `target` is given other than exactly for `changes: target`, or names a field the input does not list and require, or one that is not a typed id (a string with a `pattern` anchored by `^` and `$` and a `maxLength` of at most 256, or an object of nothing but required ones). Within that, what the pattern admits is the service's word: Station checks that it bounds the whole string, not that it is narrow. A host is a value, never fixed by the contract; an operation gives `derived` and neither takes `handed` nor calls back; `spends.reports` does not match `runs`; an input schema lists a property named `handed`, which only Station sends.
+
+## What Station hands over
+
+An operation that takes `handed` is called with its arguments and, beside them, a `handed` argument Station adds; a caller never supplies it, and Station refuses a call whose arguments name it:
+
+```
+{ "items": [ { "docking": "<docking>", "ref", "kind", "updated_at", "mapping_version", "fields": { "<name>": { "kind", "value" } } } ],
+  "document": null | { "id", "version", "content": { ... }, "approval": { "revision", "approved_by", "content_hash" } } }
+```
+
+Each item is a record a docked source gave back to a read Station made and recorded for the person (or the agent's owner) the call is for, named by the docking it was read from and its ref; at most 50, each once. `document` is a document Station approved for the docking, such as a team profile, at most 65536 UTF-8 bytes of content. Station digests the call's arguments with `handed` among them, so a retry under one request id that would hand over something else is another call (`request_conflict`). The ledger keeps the docking and ref of each item handed over, never a field.
+
+## A harness
+
+Station docks a service by itself as a harness when its one operation runs as a task, takes `handed`, gives `derived`, changes nothing, reaches nobody outside and calls nothing back; the only argument it may take from a caller is an optional `brief`, a string whose schema bounds it with a `maxLength` of at most 4096; Station carries one of at most 4096 UTF-8 bytes as written and records it nowhere. It may also take `own` (its templates) and spend. A harness docks reading one to eight live source dockings, and a configured pair's harness reads its own source.
+
+A run is one decision of the core, for the caller and, for an agent, its owner. Station reads each source the caller names, hands the records it recorded for that caller and the approved context document to the harness, starts the task, and follows its `status` until it finishes, within the one harness bound of 180 seconds: each request to the harness has a 15-second timeout, and the follow stops early enough for a last status and a cancel to fit in the bound. A task still running then is cancelled and nothing is held. Once the task has started, Station asks it to stop whatever goes wrong, and a follow it could not read to the end is recorded as of unknown outcome, never as not performed. When it succeeds, its `derived` result has passed the checks above, so every entry names only items handed over in this call. Station holds that result outside the ledger, for a reviewer, before it returns it; the ledger records the run's content address, a run record of counts, ids and hashes, and the task's steps and decisions, never an output. A held run is deleted once every entry has a decision and the retention period has passed.
 
 ## Answers
 
@@ -124,5 +141,33 @@ Each request is sent in a session whose `station_describe` answered at the confi
 ## What the ledger keeps of a task
 
 One entry per thing Station saw or did: a start (or a start refused, or one whose outcome is unknown), a status read when it changed and at least once an interval, a cancel, the task found stale, a content view. An entry holds ids, the task's and steps' states, step labels, decision kinds with the refs of the handed items they were about and their outcome codes, spend (`unpriced` when the service could not price it), failure and refusal codes, the request id and the arguments' digest, the target and the decisions it rested on, and the trace. Never the arguments, a step's duration or content, or anything the service wrote beyond a one-line label: the ledger refuses an entry with any other field. A content view records who read which step of which task, when, under which trace, and whether it was kept; the content goes to the person and nowhere else, and a view the ledger will not take hands nothing over.
+
+## The conformance kit
+
+One kit checks every `station/service@1` service the same way (`src/docking/service-conformance.ts`). `station_check_service` runs it for any member before a docking is proposed, and a builder runs it against their own service with `bun run kit:service --url <url> --token-file <test signing key PEM> --issuer <issuer>` (`tools/service-kit.ts`; `--allow-private-addresses` to reach one on a private address), the service trusting that test key and issuer for the run. It docks and grants nothing, hands over no item anyone holds, and calls the service as Station does: a fresh token for every request, the call envelope on every call.
+
+Each check answers `pass`, `fail` or `skipped` with a hint in Station's words. A check is named by position (`operation_2`, `operation_3_status`), never by anything the service wrote.
+
+| Check | What |
+|---|---|
+| `describe` | `station_describe` with a token signed for the service's URL, read strictly. Fails, and stops the kit, when the session or the call is refused, or the answer is not `station/service@1` or breaks its shape |
+| `token_audience` | the same with a token signed for another audience: passes only on HTTP 401 or 403 |
+| `declarations` | the declarations fit together, as above. When they do not, no operation is called (`operations` is skipped) |
+| `operation_N` | by what the operation declares, below |
+| `operation_N_retry`, `_status`, `_cancel` | for a task the kit started |
+| `content` | one step's content, once, for a service that offers it and a task that reported a step with content; skipped otherwise. The content is read against the contract and kept nowhere |
+| `refuses_extra_arguments` | the first operation answered with fictional arguments, called again with an argument its schema does not list: passes on a refusal of the request (HTTP 400, 404 or 422, a protocol error, a tool error) or a non-retryable error answer; another status, such as 401 or 429, fails |
+| `description` | the description check over `purpose`, `use_when`, `not_for`, each example's `ask`, `limits`, and each operation's `summary` |
+
+**Fictional arguments.** Station makes them from the operation's input schema, the same on every check: only required properties, each the schema's `const` or first `enum` value, a string from a fixed list (a sentence saying the input is fictional, then short ids such as `check-1` and `1`) that fits its `pattern` and length, a fixed value for the `date-time`, `date`, `email`, `uri` and `uuid` formats, a number at its minimum (or 1), `false`, an empty array. When nothing fits, the operation is not run, and its check is `skipped`. A pattern runs on Station's own thread, so Station tries only a short one (at most 256 characters) with no repeated group (`(a|b)*`, `(ab){3}`), no backreference or lookaround, and at most three quantifiers whose count varies (`*`, `+`, `?`, `{n,}`, `{n,m}`); an argument with any other pattern cannot be made, and the operation is not run.
+
+**What is run, and what never is.**
+
+- An operation that **changes nothing, reaches nobody outside and calls nothing back** is run, spending included: one that runs now once, its answer read against its declaration with no item handed over. An error answer `not_found`, `invalid_request` or `unsupported` to that first call is `skipped`, since the answer's shape was not seen; `rate_limited` or `unavailable` to any call is `skipped` with a hint to run it again; any other is a `fail`. A retry, status, content read or cancel names the task the service just started, so any error answer there but a retryable one fails.
+- A **task** of that kind is started once under a fresh `station/request`, started again under the same one (it must answer `already_started`, naming the same task; a second task fails `operation_N_retry` and is cancelled too), its status read against its declaration and the stale rule (an `updated_at` more than two intervals old fails), one step's content read if offered, and cancelled.
+- An operation that **changes an outside system** is never run. For a task, Station's own task client is asked to start it naming a fictional target that fits the declared type, with no account granted anything: it passes when that is refused as not granted and nothing of the operation reached the service. This is Station's own refusal: what it checks of the service is that its target declaration is one Station can read and decide, and that it describes itself the same way twice. Station does not yet call an operation that runs now and changes a target, so for one of those only that Station reads the target from its input is checked.
+- An operation that **changes its own state, reaches people outside, or calls back into Station** is never run: `skipped`, checked by its declaration alone.
+
+What the kit cannot see is what the service does inside: it reads answers, as Station does, and an operation it never runs is checked by its words.
 
 Not here yet: operations that run now through this client, arguments checked against an input schema beyond the target, the reach-out rule before a call, calls back into Station named by their task, and the ledger's record of an operation's declared and observed effects. Those come as the services move onto this contract.

@@ -1,5 +1,32 @@
 # Changelog
 
+## station 2.0.0
+
+- Contract schema `describe-v1.schema.json` removed.
+- Contract schema `describe-v2.schema.json` removed.
+- Contract prose `errors.md` reworded.
+- Contract schema `errors.schema.json` changed.
+- Contract schema `factory-v2.schema.json` removed.
+- Contract schema `harness-v1.schema.json` removed.
+- Contract schema `harness-v2.schema.json` removed.
+- Contract prose `service-v1.md` reworded.
+- Contract schema `service-v1.schema.json` changed.
+- Contract schema `source-v1.schema.json` removed.
+- Contract schema `source-v2.schema.json` removed.
+- `station-factory`: SKILL.md reworded.
+- `station-service`: SKILL.md reworded.
+- Decided by hand: contract file describe-v1.md was removed: say what it means for a service; published as major.
+- Decided by hand: contract file describe-v2.md was removed: say what it means for a service; published as major.
+- Decided by hand: contract file factory-v2.md was removed: say what it means for a service; published as major.
+- Decided by hand: contract file harness-v1.md was removed: say what it means for a service; published as major.
+- Decided by hand: contract file harness-v2.md was removed: say what it means for a service; published as major.
+- Decided by hand: contract file source-v1.md was removed: say what it means for a service; published as major.
+- Decided by hand: contract file source-v2.md was removed: say what it means for a service; published as major.
+- Decided by hand: prompt station/ask-for-access.md changed beyond its wording; published as major.
+- Decided by hand: station-factory's frontmatter metadata.version changed; published as major.
+- Decided by hand: station-service's description changed: patch if it still triggers on the same requests, major if it does not; published as major.
+- Matches Station release `main-6ff2886a7610`.
+
 ## station 1.3.0
 
 - Decided by hand: contract file service-v1.md was added: say what it means for a service; published as minor.

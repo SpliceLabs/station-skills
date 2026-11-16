@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "station/service@1",
-  "description": "What every docked service answers to `station_describe`, what each operation answers, and what a task's `status`, `cancel` and `content` answer. An operation's arguments are the input schema it declares. See service-v1.md. Also checked by Station, beyond this schema: (1) Station counts a string's length in UTF-8 bytes where the contract says bytes, and otherwise in UTF-16 code units; the schema counts characters at the same bound, so a string with characters outside ASCII can pass the schema and still be too long. (2) Text a service writes for people or a model to read also holds no tag character (U+E0000 to U+E007F) and no lone surrogate; the `pattern` covers the rest of that rule. (3) No object anywhere in the answer holds a `__proto__`, `constructor` or `prototype` key, and nothing nests deeper than 40 levels (an opaque object, 32). (4) When `models` is given, `model` is not null and is one of `models`, and no two models share the label `provider/model`. (5) Each operation's `input_schema` serializes to at most 16384 UTF-8 bytes. (6) Each record's `fields` serializes to at most 16384 UTF-8 bytes. (7) Each derived entry's `content` serializes to at most 16384 UTF-8 bytes. (8) A step's `content` serializes to at most 65536 UTF-8 bytes. (9) A record carries at most 64 fields. (10) Declarations fit together: operation names are listed once and none is `describe`, `status`, `cancel` or `content`; each example names a listed operation; a service with a task gives `reporting_interval_seconds` and answers `status` and `cancel`, and a service with none gives null and no task calls. (11) Each `input_schema` is an object schema with `additionalProperties: false`, holding at its top level only `type`, `properties`, `required`, `additionalProperties`, `title` and `description`; `required` is a list of properties it lists; it lists properties exactly when the operation takes `args`. (12) `kinds` is given exactly when the operation gives back `records`; `target` exactly when it changes `target`, naming a required input property that is a typed id: a string with a `pattern` anchored by `^` and `$` and a `maxLength` of at most 256 (and no other keyword but `minLength`, `title` and `description`), or an object of nothing but required ones. (13) An operation that gives back `derived` takes `handed` or calls back; `spends.reports` is `answer` for an operation that runs `now` and `status` for a `task`. (14) An answer is for the operation called; it carries `result` for an operation that runs `now` and `task` for a `task`; its result's `gives` is the one the operation declared; each record is of a declared kind and no ref repeats; each derived entry names only items Station handed over in this call, each once; `spend` is given exactly when the operation spends. (15) A status is for the task asked about: no step id repeats and each `parent` comes earlier; a step or task has `failure` exactly when it failed; `waiting_on` only on a waiting step, and a waiting task has one; `result` exactly when it succeeded, fitting the declaration, and records in it carry no `next_cursor`; each decision's `step` is a reported step and its `about` names only items handed over; `spend` exactly when the operation spends. (16) A step label is one line. A `cancel` answer is for the task asked about; a `content` answer is for the task and step asked about, and is asked only of a service whose `task_calls` lists `content`. (17) In place of a result, any tool may answer the shared error answer, `errors.schema.json`.",
+  "description": "What every docked service answers to `station_describe`, what each operation answers, and what a task's `status`, `cancel` and `content` answer. An operation's arguments are the input schema it declares, and, for one that takes `handed`, the `handed` argument Station adds. See service-v1.md. Also checked by Station, beyond this schema: (1) Station counts a string's length in UTF-8 bytes where the contract says bytes, and otherwise in UTF-16 code units; the schema counts characters at the same bound, so a string with characters outside ASCII can pass the schema and still be too long. (2) Text a service writes for people or a model to read also holds no tag character (U+E0000 to U+E007F) and no lone surrogate; the `pattern` covers the rest of that rule. (3) No object anywhere in the answer holds a `__proto__`, `constructor` or `prototype` key, and nothing nests deeper than 40 levels (an opaque object, 32). (4) When `models` is given, `model` is not null and is one of `models`, and no two models share the label `provider/model`. (5) Each operation's `input_schema` serializes to at most 16384 UTF-8 bytes. (6) Each record's `fields` serializes to at most 16384 UTF-8 bytes. (7) Each derived entry's `content` serializes to at most 16384 UTF-8 bytes. (8) A step's `content` serializes to at most 65536 UTF-8 bytes. (9) A handed document's `content` serializes to at most 65536 UTF-8 bytes. (10) No operation's `input_schema` lists a property `handed`: only Station sends it, to an operation that takes `handed`, with each item once. (11) A record carries at most 64 fields. (12) Declarations fit together: operation names are listed once and none is `describe`, `status`, `cancel` or `content`; each example names a listed operation; a service with a task gives `reporting_interval_seconds` and answers `status` and `cancel`, and a service with none gives null and no task calls. (13) Each `input_schema` is an object schema with `additionalProperties: false`, holding at its top level only `type`, `properties`, `required`, `additionalProperties`, `title` and `description`; `required` is a list of properties it lists; it lists properties exactly when the operation takes `args`. (14) `kinds` is given exactly when the operation gives back `records`; `target` exactly when it changes `target`, naming a required input property that is a typed id: a string with a `pattern` anchored by `^` and `$` and a `maxLength` of at most 256 (and no other keyword but `minLength`, `title` and `description`), or an object of nothing but required ones. (15) An operation that gives back `derived` takes `handed` or calls back; `spends.reports` is `answer` for an operation that runs `now` and `status` for a `task`. (16) An answer is for the operation called; it carries `result` for an operation that runs `now` and `task` for a `task`; its result's `gives` is the one the operation declared; each record is of a declared kind and no ref repeats; each derived entry names only items Station handed over in this call, each once; `spend` is given exactly when the operation spends. (17) A status is for the task asked about: no step id repeats and each `parent` comes earlier; a step or task has `failure` exactly when it failed; `waiting_on` only on a waiting step, and a waiting task has one; `result` exactly when it succeeded, fitting the declaration, and records in it carry no `next_cursor`; each decision's `step` is a reported step and its `about` names only items handed over; `spend` exactly when the operation spends. (18) A step label is one line. A `cancel` answer is for the task asked about; a `content` answer is for the task and step asked about, and is asked only of a service whose `task_calls` lists `content`. (19) In place of a result, any tool may answer the shared error answer, `errors.schema.json`.",
   "$defs": {
     "station_describe.arguments": {
       "type": "object",
@@ -412,6 +412,183 @@
         "reporting_interval_seconds",
         "task_calls",
         "operations"
+      ],
+      "additionalProperties": false
+    },
+    "handed.argument": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "docking": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,31}$"
+              },
+              "ref": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+              },
+              "kind": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "company",
+                      "person",
+                      "deal",
+                      "stage",
+                      "note",
+                      "task",
+                      "space",
+                      "page",
+                      "comment"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^x-[a-z0-9]+(?:-[a-z0-9]+)*$"
+                  }
+                ]
+              },
+              "updated_at": {
+                "type": "string",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "mapping_version": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fields": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "number",
+                        "boolean",
+                        "datetime",
+                        "id",
+                        "link",
+                        "name",
+                        "email",
+                        "phone",
+                        "address",
+                        "money",
+                        "other"
+                      ]
+                    },
+                    "value": {
+                      "$ref": "#/$defs/json"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "docking",
+              "ref",
+              "kind",
+              "updated_at",
+              "mapping_version",
+              "fields"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "document": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                },
+                "version": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "content": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "additionalProperties": {
+                    "$ref": "#/$defs/json"
+                  }
+                },
+                "approval": {
+                  "type": "object",
+                  "properties": {
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                    },
+                    "approved_by": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[^\\u0000-\\u0009\\u000b-\\u001f\\u007f-\\u009f\\u061c\\u200b-\\u200f\\u2028-\\u202e\\u2060-\\u2064\\u2066-\\u2069\\ufeff]*$"
+                    },
+                    "content_hash": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  },
+                  "required": [
+                    "revision",
+                    "approved_by",
+                    "content_hash"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "id",
+                "version",
+                "content",
+                "approval"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "items",
+        "document"
       ],
       "additionalProperties": false
     },
